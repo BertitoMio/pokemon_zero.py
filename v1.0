@@ -53,9 +53,6 @@ Just without, you know, graphics. Or Pokemon battles.
 
 Let's begin!"""
 
-# Left to do:
-# Add comments
-
 
 # let's import all our crap that we'll need
 from random import randint
