@@ -1,0 +1,412 @@
+"""Welcome to Pokemon Zero v1.0
+1234567890123456789012345678901234567890123456789012345678901234567890123456789
+        10        20        30        40        50        60        70       79
+In this game, the player will travel from Pallet Town to Viridian City.
+Along the way, he or she will encounter 3 different pokemon.
+These pokemon will be randomly drawn from an imported list.
+
+In battle, the player will have 3 options:
+Throw a rock, damaging the Pokemon and making it easier to catch.
+Throw a pokeball, possibly catching the Pokemon.
+Run away, going to the next scene.
+
+Each battle will have 4 different possible outcomes:
+The player will catch the Pokemon.
+The player will k/o the Pokemon.
+The player will run away from the battle.
+The Pokemon will k/o the player.
+
+The player will start with 50 hp.
+Pokemon attacks will do 3-5 damage per move.
+Pokemon will have 20-30 hp.
+Rocks will do 5-10 damage.
+
+Depending on the Pokemon's health, the odds of catching it will be:
+ hp >= 66% =       10% chance to catch
+ 66% > hp >= 33% = 50% chance to catch
+ hp < 33%        = 90% chance to catch
+
+There will be a number of scripts for each outcome.
+Again, these scripts will be randomly drawn from an imported list.
+The beginning and ending scene scripts will not be random.
+However, they will vary depending on the number of Pokemon caught / killed.
+
+Planned features:
+-All Kanto cities, leading to more Pokemon encounters.
+	-Possibly a unique region. Or maybe just Skryim :D
+-In-game map.
+-Add a pretty box around Pokemon and player's hp in battles.
+	-This means players will be limited in their name length.
+-The ability to travel freely around the region.
+-Each route will be unique (no more random scripts).
+-Player will be healed at each new city.
+-Player can level up by capturing Pokemon.
+-Rare Pokemon will be predetermined events.
+-Pokemon will only appear on certain Routes.
+-Pokemon will have independent HP ranges and movesets.
+-Player will be able to save progress.
+-Player will receive money for defeating Pokemon.
+-Money will go towards Pokeballs and potions.
+
+Basically, this will eventually be a full-on Pokemon game.
+Just without, you know, graphics. Or Pokemon battles.
+
+Let's begin!"""
+
+# Left to do:
+# Add comments
+
+
+# let's import all our crap that we'll need
+from random import randint
+import time
+import sys
+import json
+
+# import and set up our list of pokemon
+pokedex = []
+	
+pokefile = open('pokedex_simple.txt', 'r')
+for line in pokefile:
+	pokedex.append(line)
+
+# there are 3 different scripts in each json file
+# if more are added, this will need to be updated
+script_key= [
+	"script1",
+	"script2",
+	"script3",
+	]
+
+# initialize our script variables as lists
+pre_scripts = []
+post_scripts = []
+
+# imports our pre- and post-battle scripts	
+pre_script_file = open('pokemon_zero_pre_scripts.json', 'r')
+pre_scripts = json.load(pre_script_file)
+
+post_script_file = open('pokemon_zero_post_scripts.json', 'r')
+post_scripts = json.load(post_script_file)
+
+
+
+# this class contains the player's info
+class Trainer(object):
+	def __init__(self, name, hp, caught):
+		self.name = name
+		self.hp = hp
+		self.caught = caught
+
+# this class runs the entire game
+class Engine(object):
+	# AMAZING TITLE SCREEN GOOOOOOOOO
+	def __init__(self):
+		print "\n"
+		print_fast("-=-" * 20)
+		print ""
+		print_fast("\t\tWelcome to Pokemon Zero v1.0")
+		print ""
+		print_fast("-=-" * 20)
+		print "\n"
+		time.sleep(2)
+		
+	# this is where the whole thing is ran
+	# could've be achieved by just using functions
+	# but I really needed to practice with classes
+	# as it stands, there is a bit of repetition, could be improved
+	def play(self):
+		player = Trainer("", 50, [])
+		pallet_town(player)
+		
+		print_fast('---' * 20)
+		
+		script_print("pre")
+		first = Encounter()
+		first.battle(player)
+		script_print("post")
+		time.sleep(2)
+		
+		print_fast('---' * 20)
+		
+		script_print("pre")
+		second = Encounter()
+		second.battle(player)
+		script_print("post")
+		time.sleep(2)
+		
+		print_fast('---' * 20)
+		
+		script_print("pre")
+		third = Encounter()
+		third.battle(player)
+		script_print("post")
+		time.sleep(2)
+		
+		print_fast('---' * 20)
+		
+		viridian_city(player)
+				
+		
+
+class Encounter(object):
+	# again, this could have been written as a function
+	# would have saved a few lines of code
+	# I wanted to practice with the __init__ method though
+	def __init__(self):
+		self.pokemon = pokedex[randint(1, 151)]
+		self.pokemon = self.pokemon.replace('\n', '')
+		print_slow("A wild %s appears!\n" % self.pokemon)
+	
+	# this runs the pokemon battles
+	def battle(self, player):
+		# pokemon gets 20-30 hp
+		poke_hp_max = randint(20, 30)
+		poke_hp = poke_hp_max
+		intro = "/-\\" * 20
+		for letter in intro:
+			sys.stdout.write(letter)
+			time.sleep(.05)
+		print ""
+		while True:
+			print ''
+			# player's hp carries over from battle to battle
+			print_fast("%s's HP: %d / 50" % (player.name, player.hp))
+			print_fast(
+				"%s's HP: %d / %d" % (self.pokemon.title(), poke_hp,
+					poke_hp_max))
+					
+			player_move = player_choices()
+			
+			# if player throws rock
+			if player_move == '1':
+				chance = randint(1, 100)
+				
+				# 95% chance to hit
+				if chance < 95:
+					# rocks do 5-10 damage
+					damage = randint(5, 10)
+					poke_hp -= damage
+					print_fast(
+						"You throw a rock at %s." % self.pokemon.title())
+					print_fast("It does %d damage." % damage)
+				
+				else:
+					print_fast("You missed!")
+			
+			# if player throws pokeball
+			elif player_move == '2':
+				print_fast(
+					"You throw a Pokeball at %s." % self.pokemon.title())
+				odds = randint(1, 10)
+				
+				time.sleep(2)
+				
+				# pokemon with > 66% hp has a 10% chance to get caught
+				if (float(poke_hp) / poke_hp_max) >= 0.66:
+					if odds == 1:
+						print_fast("You caught the %s!" % self.pokemon)
+						player.caught.append(self.pokemon)
+						break
+					else:
+						print_fast(
+							"%s dodges nimbly out of the way." % (
+								self.pokemon.title()))
+				
+				# pokemon with > 33% hp has a 50% chance to get caught
+				elif 0.66 > poke_hp >= 0.33:	
+					if (odds % 2) == 0:
+						print_fast("You caught the %s!" % self.pokemon)
+						player.caught.append(self.pokemon)
+						break
+					else:
+						print_fast(
+							"%s swats the Pokeball away!" % (
+								self.pokemon.title()))
+				# pokemon with < 33% hp has a 90% chance to get caught
+				else:
+					if odds > 1:
+						print_fast("You caught the %s!" % self.pokemon)
+						player.caught.append(self.pokemon)
+						break
+					else:
+						print_fast(
+							"You narrowly miss %s with the Pokeball!" % (
+								self.pokemon.title()))
+			
+			# since the player_choices function will only return a 1, 2, or 3
+			# we can finish this with just an else statement
+			else:
+				print_fast("You run away from the %s." % self.pokemon)
+				break
+				
+			time.sleep(2)
+			
+			# too many rocks and...
+			if poke_hp <= 0:
+				print_fast("The wild %s fainted." % self.pokemon)
+				break
+			
+			# the pokemon fights back if not caught or ko'd
+			else:
+				print ""
+				poke_attack = randint(3, 5)
+				player.hp -= poke_attack
+				print_fast("%s hits you for %d damage." % (
+					self.pokemon.title(), poke_attack))
+							
+			time.sleep(0.5)
+			print ""
+
+			# if the player loses all their hp, game over
+			if player.hp <= 0:
+				game_over(self.pokemon)
+		
+		time.sleep(2)
+		print ""
+		outro = "\\-/" * 20
+		for letter in outro:
+			sys.stdout.write(letter)
+			time.sleep(.05)
+		print ""
+
+# this explains the battle system for teh nubs
+# tabbed out for extra prettiness
+def tutorial():
+	print ""
+	print_fast("-" * 60)
+	print_slow("\n\t-= Tutorial =-\n")
+	print_slow("\tIn battle, you will have 3 options:")
+	print_slow("\t1) Throw rock, damaging the Pokemon")
+	print_slow("\t2) Throw Pokeball, (hopefully) capturing the Pokemon")
+	print_slow("\t3) Run away without fighting\n")
+	print_slow("\tLower HP Pokemon are easier to catch.")
+	print_slow("\tIf your HP gets low, don't be ashamed to run away!\n")
+	print_fast("-" * 60)
+	time.sleep(2)
+	print ""
+	
+# this is the opening scene
+def pallet_town(player):
+	print_slow("Hello! What is your name?\n")
+	player.name = raw_input(">>>")
+	print_slow("\nHello %s! My name is Maple!" % player.name)
+	print_slow("People call me the Pokemon Professor.")
+	print_slow("Okay, really, nobody says that.")
+	print_slow("One day....\n")
+	# poor prof. maple :/
+	print_slow("." * 20)
+	print_slow("\nHuh? Oh, right.")
+	print_slow( "I need you to to go to Viridian City for me.")
+	print_slow("I had a package delivered to the PokeCenter there.")
+	print_slow("Pick it up for me, and try to catch some Pokemon on the way.")
+	print_slow("Here's a bag of rocks, and here's a bag of Pokeballs.")
+	time.sleep(2)
+	
+	# here's where our player decides whether or not to view the tutorial
+	while True:
+		print_slow("\nDo you need to know how to catch Pokemon?")
+		print_fast("1) Yes.")
+		print_fast("2) No.\n")
+		answer = raw_input(">>> ")
+		if answer == '1':
+			tutorial()
+			break
+		elif answer == '2':
+			print_slow("\nOkay then.")
+			break
+		else:
+			print_slow("\nEnter a 1 or a 2.\n")
+				
+	print_slow("Good luck out there!\n")
+	time.sleep(2)
+
+# this is the closing scene, unless the player faints	
+def viridian_city(player):
+	print ''
+	print_slow("You pass through the gate to Viridian City.")
+	print_slow("Well done! You made it here in one piece!")
+	print_slow("Let's see how you did.")
+	time.sleep(2)
+	total_caught = len(player.caught)
+	print_slow("\nYou caught %d Pokemon!" % total_caught)
+	
+	# here's a special message for all those slackers out there
+	if len(player.caught) > 0:
+		print_slow("You caught:")
+		for i in player.caught:
+			print_slow(i)
+	else:
+		print_slow("Wait, you didn't catch a single one?")
+		print_slow("You just ran away or knocked them out?")
+		print_slow(
+			"You're never going to be a Pokemon Master with that attitude!")
+	
+	time.sleep(2)	
+	print_slow("\nWell, you should probably go get Maple's package!")
+	print_slow("See you next time!\n\n")
+
+# if the player gets ko'd, this is the closing scene
+def game_over(pokemon):
+	print ''
+	print_slow("You ran out of HP! You whited out!")
+	print_slow("Oh man, that %s was tough!" % pokemon)
+	print_slow("Better luck next time!\n\n")
+	exit(0)
+
+# this will control our pre and post-battle scripts
+def script_print(when):
+	script_num = randint(0, 2)
+	print ""
+	if when == "pre":
+		for i in pre_scripts[script_key[script_num]]:
+			print_slow(i)
+	
+	elif when == "post":
+		for i in post_scripts[script_key[script_num]]:
+			print_slow(i)
+			
+	else:
+		print "SCRIPT PRINT ERROR"
+		
+	print ""
+
+# our list of moves while in battl.e	
+def player_choices():
+	while True:
+		print ""
+		print_slow("What do you do?")
+		print_fast("1) Throw a rock")
+		print_fast("2) Throw a Pokeball")
+		print_fast("3) Run away\n")
+		choice = raw_input(">>> ")
+		print ''
+		if choice == '1' or choice == '2' or choice == '3':
+			break
+		else:
+			print_fast("Enter a 1, 2 or 3.")
+	return choice
+	
+# these two functions make our text print out non-instantaneously
+# you know, like in a pokemon game
+def print_slow(sentence):
+	for letter in sentence:
+		sys.stdout.write(letter)
+		time.sleep(0.05)
+	print ""
+	time.sleep(0.75)
+	
+def print_fast(sentence):
+	for letter in sentence:
+		sys.stdout.write(letter)
+		time.sleep(0.01)
+	print ""
+	time.sleep(0.5)
+
+# this is where things actually begin	
+game = Engine()
+game.play()
+
+pokefile.close()
+pre_script_file.close()
+post_script_file.close()
