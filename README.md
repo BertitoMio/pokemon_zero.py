@@ -1,5 +1,4 @@
-pokemon_zero.py
-A text-based Pokemon game.
+pokemon_zero.py: A text-based Pokemon game.
 
 In this game, the player will travel from Pallet Town to Viridian City.
 Along the way, he or she will encounter 3 different pokemon.
@@ -54,10 +53,10 @@ Basically, this will eventually be a full-on Pokemon game.
 Just without, you know, graphics. Or Pokemon battles.
 
 
-# Planned 1.1 features:
-# New locations:
-#	Route 2 / Viridian Forest
-#	Pewter City
-# Ability to travel back and forth between current cities
-# New sub-list for Rare Pokemon
-# Player name limit, pretty battle box
+Planned 1.1 features:
+New locations:
+	Route 2 / Viridian Forest
+	Pewter City
+Ability to travel back and forth between current cities
+New sub-list for Rare Pokemon
+Player name limit, pretty battle box
